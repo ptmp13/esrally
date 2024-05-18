@@ -1,0 +1,660 @@
+    {
+      "name": "index",
+      "operation-type": "bulk",
+      "bulk-size": {{bulk_size | default(10000)}},
+      "ingest-percentage": {{ingest_percentage | default(100)}}
+    },
+    {
+      "name": "update",
+      "operation-type": "bulk",
+      "bulk-size": {{bulk_size | default(10000)}},
+      "ingest-percentage": {{ingest_percentage | default(100)}},
+      "conflicts": "{{conflicts | default('random')}}",
+      "on-conflict": "{{on_conflict | default('update')}}",
+      "conflict-probability": {{conflict_probability | default(25)}},
+      "recency": {{recency | default(0)}}
+    },
+    {
+      "name": "wait-until-merges-finish",
+      "operation-type": "index-stats",
+      "index": "_all",
+      "condition": {
+        "path": "_all.total.merges.current",
+        "expected-value": 0
+      },
+      "retry-until-success": true,
+      "include-in-reporting": false
+    },
+    {
+      "name": "default",
+      "operation-type": "search",
+      "body": {
+        "query": {
+          "match_all": {}
+        }
+      }
+    },
+    {
+      "name": "range",
+      "operation-type": "search",
+      "body": {
+        "query": {
+          "range": {
+            "total_amount": {
+              "gte": 5,
+              "lt": 15
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "distance_amount_agg",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "bool": {
+            "filter": {
+              "range": {
+                "trip_distance": {
+                  "lt": 50,
+                  "gte": 0
+                }
+              }
+            }
+          }
+        },
+        "aggs": {
+          "distance_histo": {
+            "histogram": {
+              "field": "trip_distance",
+              "interval": 1
+            },
+            "aggs": {
+              "total_amount_stats": {
+                "stats": {
+                  "field": "total_amount"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "autohisto_agg",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "01/01/2015",
+              "lte": "21/01/2015",
+              "format": "dd/MM/yyyy"
+            }
+          }
+        },
+        "aggs": {
+          "dropoffs_over_time": {
+            "auto_date_histogram": {
+              "field": "dropoff_datetime",
+              "buckets": 20
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "date_histogram_agg",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+              "dropoff_datetime": {
+              "gte": "01/01/2015",
+              "lte": "21/01/2015",
+              "format": "dd/MM/yyyy"
+            }
+          }
+        },
+        "aggs": {
+          "dropoffs_over_time": {
+            "date_histogram": {
+              "field": "dropoff_datetime",
+              "calendar_interval": "day"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "date_histogram_calendar_interval",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "dropoffs_over_time": {
+            "date_histogram": {
+              "field": "dropoff_datetime",
+              "calendar_interval": "week"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "date_histogram_calendar_interval_with_tz",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "dropoffs_over_time": {
+            "date_histogram": {
+              "field": "dropoff_datetime",
+              "calendar_interval": "week",
+              "time_zone": "America/New_York"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "date_histogram_fixed_interval",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "dropoffs_over_time": {
+            "date_histogram": {
+              "field": "dropoff_datetime",
+              "fixed_interval": "10d"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "date_histogram_fixed_interval_with_tz",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "dropoffs_over_time": {
+            "date_histogram": {
+              "field": "dropoff_datetime",
+              "fixed_interval": "10d",
+              "time_zone": "America/New_York"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "date_histogram_fixed_interval_with_metrics",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "dropoffs_over_time": {
+            "date_histogram": {
+              "field": "dropoff_datetime",
+              "fixed_interval": "10d"
+            },
+            "aggs": {
+              "total_amount": { "stats": { "field": "total_amount" } },
+              "tip_amount": { "stats": { "field": "tip_amount" } },
+              "trip_distance": { "stats": { "field": "trip_distance" } }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "auto_date_histogram",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "dropoffs_over_time": {
+            "auto_date_histogram": {
+              "field": "dropoff_datetime",
+              "buckets": "10",
+              "minimum_interval": "day"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "auto_date_histogram_with_tz",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "dropoffs_over_time": {
+            "auto_date_histogram": {
+              "field": "dropoff_datetime",
+              "buckets": "10",
+              "time_zone": "America/New_York",
+              "minimum_interval": "day"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "auto_date_histogram_with_metrics",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "dropoffs_over_time": {
+            "auto_date_histogram": {
+              "field": "dropoff_datetime",
+              "buckets": "10",
+              "minimum_interval": "day"
+            },
+            "aggs": {
+              "total_amount": { "stats": { "field": "total_amount" } },
+              "tip_amount": { "stats": { "field": "tip_amount" } },
+              "trip_distance": { "stats": { "field": "trip_distance" } }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "composite-terms",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-02-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "vedor_payment": {
+            "composite": {
+              "sources": [
+                { "vendor_id": { "terms": { "field": "vendor_id", "order": "desc" }}},
+                { "payment_type": { "terms": { "field": "payment_type", "order": "asc" }}}
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "composite-histogram",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "vedor_payment": {
+            "composite": {
+              "sources": [
+                  { "histo": { "histogram": { "field": "total_amount", "interval": 5 } } }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "composite-date_histogram-daily",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "vedor_payment": {
+            "composite": {
+              "sources": [
+                  { "date": { "date_histogram": { "field": "pickup_datetime", "calendar_interval": "day" } } }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "composite-date_histogram-weekly",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "vedor_payment": {
+            "composite": {
+              "sources": [
+                  { "date": { "date_histogram": { "field": "pickup_datetime", "calendar_interval": "week" } } }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "composite-date_histogram-monthly",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "vedor_payment": {
+            "composite": {
+              "sources": [
+                  { "date": { "date_histogram": { "field": "pickup_datetime", "calendar_interval": "month" } } }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "composite-geotile_grid-precision-8",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-02-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "vedor_payment": {
+            "composite": {
+              "sources": [
+                  { "tile": { "geotile_grid": { "field": "pickup_location", "precision": 8 } } }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "composite-geotile_grid-precision-12",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-02-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "vedor_payment": {
+            "composite": {
+              "sources": [
+                  { "tile": { "geotile_grid": { "field": "pickup_location", "precision": 12 } } }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "composite-geotile_grid-precision-15",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-02-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "vedor_payment": {
+            "composite": {
+              "sources": [
+                  { "tile": { "geotile_grid": { "field": "pickup_location", "precision": 15 } } }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sampler-keyword",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "sample": {
+            "sampler": {
+              "shard_size": 50
+            },
+            "aggs": {
+              "vendors": {
+                "terms": {
+                  "field": "vendor_id",
+                  "size": 100
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "sampler-numeric",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-03-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "sample": {
+            "sampler": {
+              "shard_size": 50
+            },
+            "aggs": {
+              "vendors": {
+                "terms": {
+                  "field": "passenger_count",
+                  "size": 100
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "percentiles-tdigest-compression-default",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-01-15 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "trip_distance_percentiles": {
+            "percentiles": {
+              "field": "total_amount",
+              "percents": [70, 80, 90, 95, 99]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "percentiles-tdigest-compression-200",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-01-15 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "trip_distance_percentiles": {
+            "percentiles": {
+              "field": "total_amount",
+              "percents": [70, 80, 90, 95, 99],
+              "tdigest": {
+                "compression": 200
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "multi_terms-keyword",
+      "operation-type": "search",
+      "body": {
+        "size": 0,
+        "query": {
+          "range": {
+            "dropoff_datetime": {
+              "gte": "2015-01-01 00:00:00",
+              "lt": "2015-02-01 00:00:00"
+            }
+          }
+        },
+        "aggs": {
+          "trip_type_payment_type_vendor_id": {
+            "multi_terms": {
+              "terms": [
+                { "field": "trip_type" },
+                { "field": "payment_type" },
+                { "field": "vendor_id" }
+              ]
+            }
+          }
+        }
+      }
+    }
